@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# VS Code (if using)
+.vscode/
+
+# Pytest / Coverage
+*.cover
+coverage.*
+.cache/
+.pytest_cache/
+htmlcov/
+
+# Logs
+*.log
+
+# MySQL dumps or credentials
+*.sql
+*.dump
+
+# Docker
+*.pid
+*.pid.lock
+docker-compose.override.yml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Compiled or temp files
+*.swp
+*.bak
+*.tmp
+*.old
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node (if you're also using React/Vite frontend)
+node_modules/
+dist/
+build/

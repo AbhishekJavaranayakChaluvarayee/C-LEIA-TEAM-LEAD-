@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Omni Chat</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 40px;
+      background-color: #f5f5f7;
+      color: #333;
+    }
+    .chat-container {
+      max-width: 700px;
+      margin: auto;
+    }
+    .persona-info {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .persona-info h2 {
+      margin: 0 0 10px 0;
+      color: #4c8bf5;
+    }
+    .persona-info p {
+      margin: 5px 0;
+      color: #666;
+    }
+    .chat-log {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    .chat-input {
+      display: flex;
+      gap: 10px;
+    }
+    .chat-input input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #aaa;
+      font-size: 16px;
+    }
+    .chat-input button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4c8bf5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chat-input button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .chat-message {
+      margin-bottom: 10px;
+    }
+    .chat-message strong {
+      display: block;
+      font-weight: 600;
+    }
+    .system-message {
+      font-style: italic;
+      color: #666;
+    }
+    .typing-indicator {
+      font-style: italic;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .typing-dots {
+      display: flex;
+      gap: 3px;
+    }
+    .typing-dots span {
+      height: 8px;
+      width: 8px;
+      background-color: #888;
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    .typing-dots span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    @keyframes typing {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .back-button {
+      color: #4c8bf5;
+      text-decoration: none;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+    .back-button:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <a href="/newform" class="back-button">← Back to Setup</a>
+
+    <div id="persona-info" class="persona-info" style="display: none;">
+      <h2 id="persona-title">Loading...</h2>
+      <p><strong>Business Role:</strong> <span id="business-name">Loading...</span></p>
+      <p><strong>Description:</strong> <span id="business-description">Loading...</span></p>
+    </div>
+
+    <div id="chat-log" class="chat-log">
+      <div class="system-message">Initializing chat session...</div>
+    </div>
+
+    <div class="chat-input">
+      <input id="chat-input" type="text" placeholder="Type your message..." />
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+    let sessionId = null;
+    let personaId = null;
+    let domainId = null;
+
+    // Get parameters from URL or sessionStorage
+    function getSessionData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // Try URL parameters first, then sessionStorage
+      personaId = urlParams.get('persona_id') || sessionStorage.getItem('persona_id');
+      domainId = urlParams.get('domain_id') || sessionStorage.getItem('domain_id') || '1';
+      
+      const personaName = sessionStorage.getItem('persona_name') || 'AI Assistant';
+      const businessName = sessionStorage.getItem('business_name') || 'Business';
+      const businessDescription = sessionStorage.getItem('business_description') || 'No description available';
+      
+      return { personaId, domainId, personaName, businessName, businessDescription };
+    }
+
+    async function initSession() {
+      try {
+        const { personaId: pId, domainId: dId, personaName, businessName, businessDescription } = getSessionData();
+        
+        if (!pId) {
+          appendSystemMessage("❌ No persona selected. Please go back and create a persona first.");
+          document.getElementById('send-button').disabled = true;
+          return;
+        }
+
+        // Display persona information
+        document.getElementById('persona-title').textContent = `Chat with ${personaName}`;
+        document.getElementById('business-name').textContent = businessName;
+        document.getElementById('business-description').textContent = businessDescription;
+        document.getElementById('persona-info').style.display = 'block';
+
+        // Start session with the backend
+        const response = await fetch(`${API_BASE_URL}/api/start_session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            domain_id: parseInt(dId),
+            persona_id: parseInt(pId),
+            student_id: "browser-user"
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Session start failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        sessionId = data.session_id;
+        personaId = parseInt(pId);
+        domainId = parseInt(dId);
+
+        // Clear loading message and show welcome
+        document.getElementById('chat-log').innerHTML = '';
+        appendSystemMessage(`✅ Chat session started successfully!`);
+        appendSystemMessage(`You are now talking with <strong>${data.persona.name}</strong> (${data.persona.role})`);
+        appendSystemMessage(`Background: ${data.persona.background_story}`);
+        appendSystemMessage(`Feel free to ask questions to gather business requirements!`);
+        
+      } catch (err) {
+        console.error("Session initialization error:", err);
+        appendSystemMessage("❌ Failed to initialize session. Please try again or go back to setup.");
+        document.getElementById('send-button').disabled = true;
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("chat-input");
+      const sendButton = document.getElementById("send-button");
+      const message = input.value.trim();
+      
+      if (!message || !sessionId) return;
+
+      // Disable input while processing
+      sendButton.disabled = true;
+      input.disabled = true;
+      
+      appendMessage("You", message);
+      input.value = "";
+
+      // Show typing indicator
+      showTypingIndicator();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            session_id: sessionId, 
+            message: message 
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Chat failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        hideTypingIndicator();
+        appendMessage("Assistant", data.reply);
+      } catch (err) {
+        console.error("Chat error:", err);
+        hideTypingIndicator();
+        appendMessage("System", "❌ Sorry, there was an error getting a response. Please try again.");
+      } finally {
+        // Re-enable input
+        sendButton.disabled = false;
+        input.disabled = false;
+        input.focus();
+      }
+    }
+
+    function appendMessage(sender, message) {
+      const log = document.getElementById("chat-log");
+      const div = document.createElement("div");
+      div.className = "chat-message";
+      div.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function appendSystemMessage(message) {
+      const log = document.getElementById("chat-log");
+      const div = document.createElement("div");
+      div.className = "system-message";
+      div.innerHTML = message;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const log = document.getElementById("chat-log");
+      const div = document.createElement("div");
+      div.id = "typing-indicator";
+      div.className = "typing-indicator";
+      div.innerHTML = `
+        <strong>Waiting....</strong>
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      `;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      const indicator = document.getElementById("typing-indicator");
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+
+    // Event bindings
+    document.getElementById("send-button").addEventListener("click", sendMessage);
+    document.getElementById("chat-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Initialize session when page loads
+    document.addEventListener("DOMContentLoaded", initSession);
+
+    // Test API connection
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/`);
+        if (!response.ok) {
+          console.warn('⚠️ API responded but with error status');
+        }
+      } catch (error) {
+        console.error('❌ Cannot connect to API. Make sure the backend is running on http://127.0.0.1:8000');
+        appendSystemMessage('Warning: Cannot connect to backend. Please ensure the server is running.');
+      }
+    });
+  </script>
+</body>
+</html>

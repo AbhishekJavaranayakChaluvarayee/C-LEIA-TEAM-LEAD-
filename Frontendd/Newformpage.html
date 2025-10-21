@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omni: AI Virtual Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        color: #333;
+        background-color: #F8F5F1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Playfair Display', serif;
+        color: #333;
+    }
+    header {
+        padding: 15px 40px;
+        background-color: #F8F5F1;
+        border-bottom: 1px solid #eee;
+    }
+    .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .site-title {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #333;
+    }
+    .main-container {
+        display: flex;
+        flex-grow: 1;
+        max-width: 1000px;
+        margin: 0 auto;
+        width: 100%;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 60px 20px;
+    }
+    .form-panel {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .form-panel h1 {
+        font-size: 3.2em;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .form-panel .subtitle {
+        font-size: 1.1em;
+        color: #555;
+        margin-bottom: 40px;
+        text-align: center;
+    }
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    fieldset {
+        border: none;
+        margin-bottom: 30px;
+    }
+    legend {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6em;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #444;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        font-size: 0.95em;
+        font-weight: 500;
+        color: #666;
+        margin-bottom: 8px;
+    }
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1em;
+        font-family: 'Inter', sans-serif;
+        background-color: #fff;
+        box-sizing: border-box;
+    }
+    textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+    .form-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 40px;
+    }
+    .primary-button, .secondary-button {
+        padding: 14px 30px;
+        border: none;
+        border-radius: 30px;
+        font-size: 1.05em;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .primary-button {
+        background-color: #B0A08D;
+        color: #fff;
+    }
+    .primary-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+    .secondary-button {
+        background-color: transparent;
+        color: #B0A08D;
+        border: 1px solid #B0A08D;
+    }
+    .error-message {
+        color: #d32f2f;
+        font-size: 0.9em;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .success-message {
+        color: #2e7d32;
+        font-size: 0.9em;
+        margin-top: 10px;
+        text-align: center;
+    }
+    footer {
+        padding: 20px 40px;
+        background-color: #F8F5F1;
+        border-top: 1px solid #eee;
+        text-align: center;
+        font-size: 0.9em;
+        color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <span class="site-title">Omni</span>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <section class="form-panel">
+      <h1>Omni</h1>
+      <p class="subtitle">Your AI Assistant. Answers. Guides. Empowers.</p>
+      <form id="persona-form">
+        <fieldset>
+          <legend>Business Details</legend>
+          <div class="form-group">
+            <label for="business-name">Business Role</label>
+            <input type="text" id="business-name" name="Business Name" required />
+          </div>
+          <div class="form-group">
+            <label for="business-description">Business Description</label>
+            <textarea id="business-description" name="Business Description" required placeholder="Describe what this business does and its key characteristics..."></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Persona Details</legend>
+          <div class="form-group">
+            <label for="persona-name">Persona Name</label>
+            <input type="text" id="persona-name" name="Persona Name" required placeholder="e.g., Sarah Johnson" />
+          </div>
+          <div class="form-group">
+            <label for="persona-style">Persona Style & Characteristics</label>
+            <textarea id="persona-style" name="Persona Style & Characteristics" required placeholder="Describe the personality, communication style, and role of this persona..."></textarea>
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="primary-button" id="submitBtn">Get started with Omni</button>
+          <button type="reset" class="secondary-button">Clear Form</button>
+        </div>
+        
+        <div id="messageContainer"></div>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 Omni Project
+  </footer>
+
+  <script>
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+
+    document.getElementById('persona-form').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const messageContainer = document.getElementById('messageContainer');
+      
+      // Get form data using correct element IDs
+      const businessName = document.getElementById('business-name').value.trim();
+      const businessDescription = document.getElementById('business-description').value.trim();
+      const personaName = document.getElementById('persona-name').value.trim();
+      const personaStyle = document.getElementById('persona-style').value.trim();
+
+      // Basic validation
+      if (!businessName || !businessDescription || !personaName || !personaStyle) {
+        showMessage('Please fill in all fields', 'error');
+        return;
+      }
+
+      // Disable submit button
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating...';
+      messageContainer.innerHTML = '';
+
+      try {
+        console.log('Creating persona with business context...');
+        
+        // Create persona with business context (using back.py endpoint)
+        const personaResponse = await fetch(`${API_BASE_URL}/api/persona`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            domain_id: 1,  // Use existing domain
+            name: personaName,
+            role: businessName,
+            background_story: businessDescription,
+            personality_traits: personaStyle
+          })
+        });
+
+        if (!personaResponse.ok) {
+          const errorData = await personaResponse.json().catch(() => ({}));
+          throw new Error(`Persona creation failed: ${errorData.detail || personaResponse.statusText}`);
+        }
+
+        const personaData = await personaResponse.json();
+        console.log('Persona created successfully:', personaData);
+
+        // Store data for chat page
+        sessionStorage.setItem('domain_id', '1');
+        sessionStorage.setItem('persona_id', personaData.persona_id);
+        sessionStorage.setItem('persona_name', personaName);
+        sessionStorage.setItem('business_name', businessName);
+        sessionStorage.setItem('business_description', businessDescription);
+        
+        showMessage('Setup complete! Redirecting to chat...', 'success');
+        
+        // Redirect to chat page with persona ID
+        setTimeout(() => {
+          window.location.href = `/chat-ui?persona_id=${personaData.persona_id}&domain_id=1`;
+        }, 1500);
+
+      } catch (error) {
+        console.error('Error creating persona:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+      } finally {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Get started with Omni';
+      }
+    });
+
+    function showMessage(message, type) {
+      const messageContainer = document.getElementById('messageContainer');
+      messageContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+    }
+
+    // Test API connection on page load
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/`);
+        if (response.ok) {
+          console.log('✅ API connection successful');
+        } else {
+          console.warn('⚠️ API responded but with error status');
+        }
+      } catch (error) {
+        console.error('❌ Cannot connect to API. Make sure the backend is running on http://127.0.0.1:8000');
+        showMessage('Warning: Cannot connect to backend. Please ensure the server is running.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
